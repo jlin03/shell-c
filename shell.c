@@ -25,32 +25,49 @@ int count_occurence(char * string, char * c) {
     if(string[i] == c[0]) {
       occ++;
     }
+    i++;
   }
   return occ;
 }
 
 int shell() {
   char input[256];
-  while(strcmp(input,"exit")-10 != 0) {
+  while(strcmp(input,"exit") != 0) {
 
     sleep(1);
     char cwd[4096];
     printf("%s:",getcwd(cwd, sizeof(cwd)));
     fgets(input,256,stdin);
+    strtok(input, "\n");
     //printf("%d",input[strlen(input)-1]);
-    input[(sizeof(input)/sizeof(char))-1] = '\0';
-    printf("%s",input);
-  //  char ** command = parse_args(input," ",count_occurence(input," ")+1);
-  //  pid_t pid = fork();
-  //  if(pid == 0) {
-  //    if(strcmp(input,"exit")-10 != 0) {
-  //      execvp(command[0],command);
-  //    }
-  //    exit(0);
-  //  }
-  //  else {
-  //    wait(NULL);
-    //}
+    //printf("%s",input);
+    //printf("%d",strcmp(input,"exit"));
+    //printf("%d",count_occurence(input,";")+1);
+    char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
+    int cmd_amt = count_occurence(input,";")+1;
+    int i = 0;
+    //printf("\n%s",command_list[0]);
+    //printf("\n%s",command_list[1]);
+    //printf("\n%ld",sizeof(command_list)/sizeof(char*));
+
+    for(int i = 0; i < cmd_amt; i++) {
+      char * command = command_list[i];
+      char ** args = parse_args(command," ",count_occurence(command," ")+1);
+      pid_t pid = fork();
+      if(pid == 0) {
+        if(strcmp(command,"exit") != 0 && strcmp(command,"cd") != 0) {
+          execvp(args[0],args);
+        }
+        exit(0);
+      }
+      else {
+        if(strcmp(args[0],"cd") == 0) {
+          printf("\n%s",args[1]);
+          chdir(args[1]);
+        }
+        wait(NULL);
+      }
+    }
 
 
   }
