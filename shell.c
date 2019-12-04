@@ -30,6 +30,19 @@ int count_occurence(char * string, char * c) {
   return occ;
 }
 
+void remove_trailing(char * string, char * c) {
+  int i = 0;
+  if(string[i] == c[0]) {
+    while(string[i] != '\0') {
+      if(string[i+1] != c[0]) {
+        string[i] = '\0';
+      }
+      i++;
+    }
+  }
+
+}
+
 int shell() {
   char input[256];
   while(strcmp(input,"exit") != 0) {
