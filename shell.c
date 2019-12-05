@@ -35,7 +35,7 @@ char * remove_trailing(char * string, char * c) {
   int i = 0;
   out = malloc(256*sizeof(char*));
 
-  if(string[i] == c[0]) {
+  if(string[0] == c[0]) {
     while(string[i] && string[i] == c[0]) {
       if(string[i+1] && string[i+1] != c[0]) {
         strcpy(out,&string[i+1]);
@@ -43,6 +43,9 @@ char * remove_trailing(char * string, char * c) {
       }
       i++;
     }
+  }
+  else {
+    strcpy(out,&string[0]);
   }
 
   i = strlen(out)-1;
@@ -77,7 +80,7 @@ int shell() {
     //printf("\n%ld",sizeof(command_list)/sizeof(char*));
 
     for(int i = 0; i < cmd_amt; i++) {
-      char * command = command_list[i];
+      char * command = remove_trailing(command_list[i]," ");
       char ** args = parse_args(command," ",count_occurence(command," ")+1);
       pid_t pid = fork();
       if(pid == 0) {
@@ -101,6 +104,5 @@ int shell() {
 }
 
 int main() {
-  //shell();
-  /*printf("%s",*/remove_trailing("   nufidhgie g gdf gf rniue          "," ")/*)*/;
+  shell();
 }
