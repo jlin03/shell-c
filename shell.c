@@ -30,16 +30,29 @@ int count_occurence(char * string, char * c) {
   return occ;
 }
 
-void remove_trailing(char * string, char * c) {
+char * remove_trailing(char * string, char * c) {
+  char * out;
   int i = 0;
+  out = malloc(256*sizeof(char*));
+
   if(string[i] == c[0]) {
-    while(string[i] != '\0') {
-      if(string[i+1] != c[0]) {
-        string[i] = '\0';
+    while(string[i] && string[i] == c[0]) {
+      if(string[i+1] && string[i+1] != c[0]) {
+        strcpy(out,&string[i+1]);
+        break;
       }
       i++;
     }
   }
+
+  i = strlen(out)-1;
+  if(out[i] == c[0]) {
+    while(out[i] && out[i] == c[0]) {
+      out[i] = '\0';
+      i--;
+    }
+  }
+  return out;
 
 }
 
@@ -88,5 +101,6 @@ int shell() {
 }
 
 int main() {
-  shell();
+  //shell();
+  /*printf("%s",*/remove_trailing("   nufidhgie g gdf gf rniue          "," ")/*)*/;
 }
