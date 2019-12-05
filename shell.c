@@ -91,8 +91,13 @@ int shell() {
       }
       else {
         if(strcmp(args[0],"cd") == 0) {
-          printf("\n%s",args[1]);
-          chdir(args[1]);
+          if(sizeof(args)/sizeof(char*) == 1) {
+            chdir(getenv("HOME"));
+          }
+          else {
+            printf("\n%s",args[1]);
+            chdir(args[1]);
+          }
         }
         wait(NULL);
       }
