@@ -1,3 +1,12 @@
+// > redirect stdout to file (overwrite)
+// >> redirect stdout to file (append)
+// 2> redirect stderror to file
+// &> redirect stdout and stderror
+
+// < redirect stdin from a file
+
+
+
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -63,7 +72,6 @@ int shell() {
   char input[256];
   while(strcmp(input,"exit") != 0) {
 
-    sleep(1);
     char cwd[4096];
     printf("%s:",getcwd(cwd, sizeof(cwd)));
     fgets(input,256,stdin);
@@ -91,11 +99,10 @@ int shell() {
       }
       else {
         if(strcmp(args[0],"cd") == 0) {
-          if(sizeof(args)/sizeof(char*) == 1) {
+          if(!args[1]) {
             chdir(getenv("HOME"));
           }
           else {
-            printf("\n%s",args[1]);
             chdir(args[1]);
           }
         }
