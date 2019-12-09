@@ -71,46 +71,68 @@ char * remove_trailing(char * string, char * c) {
 int shell() {
   char input[256];
   while(strcmp(input,"exit") != 0) {
-
     char cwd[4096];
-    printf("%s:",getcwd(cwd, sizeof(cwd)));
+    printf("\n%s:",getcwd(cwd, sizeof(cwd)));
     fgets(input,256,stdin);
     strtok(input, "\n");
     //printf("%d",input[strlen(input)-1]);
     //printf("%s",input);
     //printf("%d",strcmp(input,"exit"));
     //printf("%d",count_occurence(input,";")+1);
-    char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
-    int cmd_amt = count_occurence(input,";")+1;
-    int i = 0;
-    //printf("\n%s",command_list[0]);
-    //printf("\n%s",command_list[1]);
-    //printf("\n%ld",sizeof(command_list)/sizeof(char*));
+    if(count_occurence(input,"|") == 1) {
+      char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
+      pipe[0] = remove_trailing(pipe[0]," ");
+      FILE *command = popen(pipe[0],"r");
+      char ** args = malloc(sizeof(char*)*2);
+      fscanf(command,"%s",args[1]);
+      printf("%s",args[1]);
 
-    for(int i = 0; i < cmd_amt; i++) {
-      char * command = remove_trailing(command_list[i]," ");
-      char ** args = parse_args(command," ",count_occurence(command," ")+1);
+      args[0] = remove_trailing(pipe[1]," ");
+      printf("%s %s",args[0],args[1]);
+
       pid_t pid = fork();
       if(pid == 0) {
-        if(strcmp(command,"exit") != 0 && strcmp(command,"cd") != 0) {
-          execvp(args[0],args);
-        }
+        execvp(args[0],args);
         exit(0);
       }
       else {
-        if(strcmp(args[0],"cd") == 0) {
-          if(!args[1]) {
-            chdir(getenv("HOME"));
-          }
-          else {
-            chdir(args[1]);
-          }
-        }
         wait(NULL);
       }
+
     }
+    else {
+      char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
+      int cmd_amt = count_occurence(input,";")+1;
+      int i = 0;
+      //printf("\n%s",command_list[0]);
+      //printf("\n%s",command_list[1]);
+      //printf("\n%ld",sizeof(command_list)/sizeof(char*));
+
+      for(int i = 0; i < cmd_amt; i++) {
+        char * command = remove_trailing(command_list[i]," ");
+        char ** args = parse_args(command," ",count_occurence(command," ")+1);
+        pid_t pid = fork();
+        if(pid == 0) {
+          if(strcmp(command,"exit") != 0 && strcmp(command,"cd") != 0) {
+            execvp(args[0],args);
+          }
+          exit(0);
+        }
+        else {
+          if(strcmp(args[0],"cd") == 0) {
+            if(!args[1]) {
+              chdir(getenv("HOME"));
+            }
+            else {
+              chdir(args[1]);
+            }
+          }
+          wait(NULL);
+        }
+      }
 
 
+    }
   }
   return 0;
 }
