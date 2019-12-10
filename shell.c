@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include<sys/wait.h>
+#include <errno.h>
 
 char ** parse_args(char * line,char * s,int size) {
     char * copy = strdup(line);
@@ -81,11 +82,22 @@ int shell() {
     //printf("%d",count_occurence(input,";")+1);
     if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
+      char output[1024];
+      char temp[128];
       pipe[0] = remove_trailing(pipe[0]," ");
       FILE *command = popen(pipe[0],"r");
       char ** args = malloc(sizeof(char*)*2);
-      fscanf(command,"%s",args[1]);
-      printf("%s",args[1]);
+      while (!feof(command)) {
+        if (fgets(temp, 128, command) != NULL) {
+          printf("%s",temp);
+          strcat(output, temp);
+        }
+      }
+      fgets(output,sizeof(char*),command);
+      args[1] = output;
+      args[1][sizeof(args[1])-1] = '\0';
+      //fgets(args[1],1024,command);
+      //fscanf(command,"%s",args[1]);
 
       args[0] = remove_trailing(pipe[1]," ");
       printf("%s %s",args[0],args[1]);
