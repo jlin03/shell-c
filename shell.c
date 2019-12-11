@@ -15,13 +15,13 @@
 #include <errno.h>
 
 void forkxec(char ** args);
+void run_line(char * input);
 
 char ** parse_args(char * line,char * s,int size) {
     char * copy = strdup(line);
     char ** args;
     int i = 0;
     char * iter;
-    args = malloc(size*sizeof(char*));
     while((iter = strsep(&copy,s)) != NULL) {
         args[i] = malloc(sizeof(char)*32);
         strcpy(args[i],iter);
@@ -93,11 +93,16 @@ int shell() {
     //printf("%s",input);
     //printf("%d",strcmp(input,"exit"));
     //printf("%d",count_occurence(input,";")+1);
+    run_line(input);
+  }
+  return 0;
+}
+
+void run_line(char * input) {
     char ** args = malloc(sizeof(char*)*20);
-    int cmd_amt;
     if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
-      char output[1024];
+      char * output = malloc(sizeof(char)*256);
       char temp[128];
       pipe[0] = remove_trailing(pipe[0]," ");
       FILE *command = popen(pipe[0],"r");
@@ -106,6 +111,7 @@ int shell() {
           strcat(output,temp);
         }
       }
+      pclose(command);
 
       args[1] = replace_char(output,"\n"," ");
       args[1][strlen(args[1])-1] = '\0';
@@ -118,10 +124,12 @@ int shell() {
           strcat(args[0],"-l ");
       }
       strcat(args[0],args[1]);
-      printf("%s",args[0]);
-      args = parse_args(args[0]," ",count_occurence(args[0], " "));
+      //int s = count_occurence(args[0], " ");
+      args = parse_args(args[0]," ",count_occurence(args[0], " ")+1);
+      //args[s]
 
       forkxec(args);
+      sleep(1);
     }
     else {
       char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
@@ -136,19 +144,18 @@ int shell() {
         forkxec(args);
       }
 
-
     }
-  }
-  return 0;
+    
 }
 
 void forkxec(char ** args) {
     pid_t pid = fork();
         if(pid == 0) {
-          printf("\n%s %s %s %s %s",args[0],args[1],args[2],args[3],args[4]);
+          //printf("\n%s %s %s %s %s",args[0],args[1],args[2],args[3],args[4]);
             if(strcmp(args[0],"exit") != 0 && strcmp(args[0],"cd") != 0) {
                 execvp(args[0],args);
-                printf("%s",strerror(errno));
+                //printf("%s",strerror(errno));
+                wait(NULL);
             }
             exit(0);
         }
