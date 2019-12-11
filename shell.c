@@ -23,7 +23,7 @@ char ** parse_args(char * line,char * s,int size) {
     char * iter;
     args = malloc(size*sizeof(char*));
     while((iter = strsep(&copy,s)) != NULL) {
-        args[i] = malloc(sizeof(char*));
+        args[i] = malloc(sizeof(char)*32);
         strcpy(args[i],iter);
         i++;
     }
@@ -83,11 +83,11 @@ char * remove_trailing(char * string, char * c) {
 }
 
 int shell() {
-  char input[256];
+  char input[1024];
   while(strcmp(input,"exit") != 0) {
     char cwd[4096];
     printf("\n%s:",getcwd(cwd, sizeof(cwd)));
-    fgets(input,256,stdin);
+    fgets(input,1024,stdin);
     strtok(input, "\n");
     //printf("%d",input[strlen(input)-1]);
     //printf("%s",input);
@@ -106,28 +106,27 @@ int shell() {
           strcat(output,temp);
         }
       }
-      
+
       args[1] = replace_char(output,"\n"," ");
       args[1][strlen(args[1])-1] = '\0';
 
       args[0] = remove_trailing(pipe[1]," ");
       strcat(args[0]," ");
-      
-      
-      if(count_occurence(args[1], " ") == 1) {
+
+
+      if(count_occurence(args[1], " ") > 0) {
           strcat(args[0],"-l ");
       }
       strcat(args[0],args[1]);
       printf("%s",args[0]);
       args = parse_args(args[0]," ",count_occurence(args[0], " "));
-      
+
       forkxec(args);
     }
     else {
       char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
       int cmd_amt = count_occurence(input,";")+1;
       int i = 0;
-      //printf("\n%s",command_list[0]);
       //printf("\n%s",command_list[1]);
       //printf("\n%ld",sizeof(command_list)/sizeof(char*));
 
@@ -146,8 +145,10 @@ int shell() {
 void forkxec(char ** args) {
     pid_t pid = fork();
         if(pid == 0) {
+          printf("\n%s %s %s %s %s",args[0],args[1],args[2],args[3],args[4]);
             if(strcmp(args[0],"exit") != 0 && strcmp(args[0],"cd") != 0) {
                 execvp(args[0],args);
+                printf("%s",strerror(errno));
             }
             exit(0);
         }
@@ -155,14 +156,14 @@ void forkxec(char ** args) {
             if(strcmp(args[0],"cd") == 0) {
                 if(!args[1]) {
                     chdir(getenv("HOME"));
-                }   
+                }
                 else {
                     chdir(args[1]);
                 }
             }
             wait(NULL);
         }
-    
+
 }
 
 int main() {
