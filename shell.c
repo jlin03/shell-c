@@ -14,6 +14,8 @@
 #include<sys/wait.h>
 #include <errno.h>
 
+void forkxec(char ** args);
+
 char ** parse_args(char * line,char * s,int size) {
     char * copy = strdup(line);
     char ** args;
@@ -38,6 +40,17 @@ int count_occurence(char * string, char * c) {
     i++;
   }
   return occ;
+}
+
+char * replace_char(char * string, char * c, char * r) {
+  int i = 0;
+  while(string[i] != '\0') {
+    if(string[i] == c[0]) {
+      string[i] = r[0];
+    }
+    i++;
+  }
+  return string;
 }
 
 char * remove_trailing(char * string, char * c) {
@@ -80,37 +93,35 @@ int shell() {
     //printf("%s",input);
     //printf("%d",strcmp(input,"exit"));
     //printf("%d",count_occurence(input,";")+1);
+    char ** args = malloc(sizeof(char*)*20);
+    int cmd_amt;
     if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
       char output[1024];
       char temp[128];
       pipe[0] = remove_trailing(pipe[0]," ");
       FILE *command = popen(pipe[0],"r");
-      char ** args = malloc(sizeof(char*)*2);
       while (!feof(command)) {
         if (fgets(temp, 128, command) != NULL) {
-          printf("%s",temp);
-          strcat(output, temp);
+          strcat(output,temp);
         }
       }
-      fgets(output,sizeof(char*),command);
-      args[1] = output;
-      args[1][sizeof(args[1])-1] = '\0';
-      //fgets(args[1],1024,command);
-      //fscanf(command,"%s",args[1]);
+      
+      args[1] = replace_char(output,"\n"," ");
+      args[1][strlen(args[1])-1] = '\0';
 
       args[0] = remove_trailing(pipe[1]," ");
-      printf("%s %s",args[0],args[1]);
-
-      pid_t pid = fork();
-      if(pid == 0) {
-        execvp(args[0],args);
-        exit(0);
+      strcat(args[0]," ");
+      
+      
+      if(count_occurence(args[1], " ") == 1) {
+          strcat(args[0],"-l ");
       }
-      else {
-        wait(NULL);
-      }
-
+      strcat(args[0],args[1]);
+      printf("%s",args[0]);
+      args = parse_args(args[0]," ",count_occurence(args[0], " "));
+      
+      forkxec(args);
     }
     else {
       char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
@@ -122,31 +133,36 @@ int shell() {
 
       for(int i = 0; i < cmd_amt; i++) {
         char * command = remove_trailing(command_list[i]," ");
-        char ** args = parse_args(command," ",count_occurence(command," ")+1);
-        pid_t pid = fork();
-        if(pid == 0) {
-          if(strcmp(command,"exit") != 0 && strcmp(command,"cd") != 0) {
-            execvp(args[0],args);
-          }
-          exit(0);
-        }
-        else {
-          if(strcmp(args[0],"cd") == 0) {
-            if(!args[1]) {
-              chdir(getenv("HOME"));
-            }
-            else {
-              chdir(args[1]);
-            }
-          }
-          wait(NULL);
-        }
+        args = parse_args(command," ",count_occurence(command," ")+1);
+        forkxec(args);
       }
 
 
     }
   }
   return 0;
+}
+
+void forkxec(char ** args) {
+    pid_t pid = fork();
+        if(pid == 0) {
+            if(strcmp(args[0],"exit") != 0 && strcmp(args[0],"cd") != 0) {
+                execvp(args[0],args);
+            }
+            exit(0);
+        }
+        else {
+            if(strcmp(args[0],"cd") == 0) {
+                if(!args[1]) {
+                    chdir(getenv("HOME"));
+                }   
+                else {
+                    chdir(args[1]);
+                }
+            }
+            wait(NULL);
+        }
+    
 }
 
 int main() {
