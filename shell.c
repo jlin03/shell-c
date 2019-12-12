@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include<sys/wait.h>
 #include <errno.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 void forkxec(char ** args);
 void run_line(char * input);
@@ -83,7 +85,7 @@ char * remove_trailing(char * string, char * c) {
 }
 
 int shell() {
-  char input[1024];
+  char * input = malloc(sizeof(char)*512);
   while(strcmp(input,"exit") != 0) {
     char cwd[4096];
     printf("\n%s:",getcwd(cwd, sizeof(cwd)));
@@ -99,11 +101,41 @@ int shell() {
 }
 
 void run_line(char * input) {
+    char temp[128];
+    char * output = malloc(sizeof(char)*256);
     char ** args = malloc(sizeof(char*)*20);
-    if(count_occurence(input,"|") == 1) {
+    if(count_occurence(input,"<") == 1) {
+        int l = count_occurence(input,"<");
+        int r = count_occurence(input,">");
+        char ** commands = parse_args(input,"<",count_occurence(input,"<")+1);
+        commands[0] = remove_trailing(commands[0]," ");
+        commands[1] = remove_trailing(commands[1]," ");
+        char * filename = commands[1];
+        if(count_occurence(commands[1],">") == 1) {
+            
+        }
+        else {
+            
+            //strcpy(temp,commands[1]);
+            //strcat(commands[0]," ");
+            //strcat(commands[0],commands[1]);
+            commands = parse_args(commands[0]," ",count_occurence(commands[0]," ")+1);
+            //printf("%s %s %s %s\n",commands[0],commands[1],commands[2],commands[3]);
+            args = commands;
+        
+            int f = open(filename,O_RDONLY);
+            int save = dup(STDIN_FILENO);
+            dup2(f,STDIN_FILENO);
+            close(f);
+            forkxec(args);
+            dup2(save,0);
+        }
+        
+    }//tr a-z A-Z < text.txt
+    
+    
+    else if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
-      char * output = malloc(sizeof(char)*256);
-      char temp[128];
       pipe[0] = remove_trailing(pipe[0]," ");
       FILE *command = popen(pipe[0],"r");
       while (!feof(command)) {
@@ -132,11 +164,11 @@ void run_line(char * input) {
       sleep(1);
     }
     else {
-      char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
       int cmd_amt = count_occurence(input,";")+1;
+      char ** command_list = parse_args(input,";",count_occurence(input,";")+1);
       int i = 0;
       //printf("\n%s",command_list[1]);
-      //printf("\n%ld",sizeof(command_list)/sizeof(char*));
+
 
       for(int i = 0; i < cmd_amt; i++) {
         char * command = remove_trailing(command_list[i]," ");
