@@ -85,11 +85,11 @@ char * remove_trailing(char * string, char * c) {
 }
 
 int shell() {
-  char * input = malloc(sizeof(char)*512);
+  char input[1024];
   while(strcmp(input,"exit") != 0) {
     char cwd[4096];
     printf("\n%s:",getcwd(cwd, sizeof(cwd)));
-    fgets(input,1024,stdin);
+    fgets(input,sizeof(char)*1024,stdin);
     strtok(input, "\n");
     //printf("%d",input[strlen(input)-1]);
     //printf("%s",input);
@@ -104,23 +104,27 @@ void run_line(char * input) {
     char temp[128];
     char * output = malloc(sizeof(char)*256);
     char ** args = malloc(sizeof(char*)*20);
+    args = parse_args(input," ",count_occurence(input," ")+1);
+    printf("%s",args[0]);
+
+
     if(count_occurence(input,"<") == 1) {
         char ** commands = parse_args(input,"<",count_occurence(input,"<")+1);
         commands[0] = remove_trailing(commands[0]," ");
         commands[1] = remove_trailing(commands[1]," ");
         char * filename = commands[1];
         if(count_occurence(commands[1],">") == 1) {
-            
+
         }
         else {
-            
+
             //strcpy(temp,commands[1]);
             //strcat(commands[0]," ");
             //strcat(commands[0],commands[1]);
             commands = parse_args(commands[0]," ",count_occurence(commands[0]," ")+1);
             //printf("%s %s %s %s\n",commands[0],commands[1],commands[2],commands[3]);
             args = commands;
-        
+
             int f = open(filename,O_RDONLY);
             int save = dup(STDIN_FILENO);
             dup2(f,STDIN_FILENO);
@@ -128,25 +132,25 @@ void run_line(char * input) {
             forkxec(args);
             dup2(save,0);
         }
-        
+
     }//tr a-z A-Z < text.txt
-    
-    else if(count_occurence(input,">") == 1){
+
+     else if(count_occurence(input,">") == 1){
         char ** commands = parse_args(input,">",count_occurence(input,">")+1);
         commands[0] = remove_trailing(commands[0]," ");
         commands[1] = remove_trailing(commands[1]," ");
         FILE *cmd_output = popen(commands[0],"r");
         FILE *w = fopen(commands[1],"w");
-        
+
         while (!feof(cmd_output)) {
             if (fgets(temp, 128, cmd_output) != NULL) {
                 fprintf(w,"%s",temp);
             }
         }
         fclose(w);
-        
+
     }
-    
+
     else if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
       pipe[0] = remove_trailing(pipe[0]," ");
@@ -190,7 +194,7 @@ void run_line(char * input) {
       }
 
     }
-    
+
 }
 
 void forkxec(char ** args) {
