@@ -105,8 +105,6 @@ void run_line(char * input) {
     char * output = malloc(sizeof(char)*256);
     char ** args = malloc(sizeof(char*)*20);
     if(count_occurence(input,"<") == 1) {
-        int l = count_occurence(input,"<");
-        int r = count_occurence(input,">");
         char ** commands = parse_args(input,"<",count_occurence(input,"<")+1);
         commands[0] = remove_trailing(commands[0]," ");
         commands[1] = remove_trailing(commands[1]," ");
@@ -133,6 +131,21 @@ void run_line(char * input) {
         
     }//tr a-z A-Z < text.txt
     
+    else if(count_occurence(input,">") == 1){
+        char ** commands = parse_args(input,">",count_occurence(input,">")+1);
+        commands[0] = remove_trailing(commands[0]," ");
+        commands[1] = remove_trailing(commands[1]," ");
+        FILE *cmd_output = popen(commands[0],"r");
+        FILE *w = fopen(commands[1],"w");
+        
+        while (!feof(cmd_output)) {
+            if (fgets(temp, 128, cmd_output) != NULL) {
+                fprintf(w,"%s",temp);
+            }
+        }
+        fclose(w);
+        
+    }
     
     else if(count_occurence(input,"|") == 1) {
       char ** pipe = parse_args(input,"|",count_occurence(input,"|")+1);
