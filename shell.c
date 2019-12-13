@@ -21,7 +21,7 @@ void run_line(char * input);
 
 char ** parse_args(char * line,char * s,int size) {
     char * copy = strdup(line);
-    char ** args;
+    char ** args = malloc(sizeof(char)*1024);
     int i = 0;
     char * iter;
     while((iter = strsep(&copy,s)) != NULL) {
@@ -89,6 +89,7 @@ int shell() {
   while(strcmp(input,"exit") != 0) {
     char cwd[4096];
     printf("\n%s:",getcwd(cwd, sizeof(cwd)));
+    strcpy(input,"");
     fgets(input,sizeof(char)*1024,stdin);
     strtok(input, "\n");
     //printf("%d",input[strlen(input)-1]);
@@ -104,9 +105,7 @@ void run_line(char * input) {
     char temp[128];
     char * output = malloc(sizeof(char)*256);
     char ** args = malloc(sizeof(char*)*20);
-    args = parse_args(input," ",count_occurence(input," ")+1);
-    printf("%s",args[0]);
-
+    strcpy(output,"");
 
     if(count_occurence(input,"<") == 1) {
         char ** commands = parse_args(input,"<",count_occurence(input,"<")+1);
