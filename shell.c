@@ -2,13 +2,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include<sys/wait.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "headers.h"
 
-void forkxec(char ** args);
-void run_line(char * input);
+
 
 char ** parse_args(char * line,char * s,int size) {
     char * copy = strdup(line);
@@ -228,8 +228,4 @@ void forkxec(char ** args) {
             wait(NULL);
         }
 
-}
-
-int main() {
-  shell();
 }
