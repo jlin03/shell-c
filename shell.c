@@ -1,12 +1,3 @@
-// > redirect stdout to file (overwrite)
-// >> redirect stdout to file (append)
-// 2> redirect stderror to file
-// &> redirect stdout and stderror
-
-// < redirect stdin from a file
-
-
-
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -113,6 +104,24 @@ void run_line(char * input) {
         commands[1] = remove_trailing(commands[1]," ");
         char * filename = commands[1];
         if(count_occurence(commands[1],">") == 1) {
+          commands = parse_args(commands[0]," ",count_occurence(commands[0]," ")+1);
+          char** filenames = parse_args(filename,">",count_occurence(filename,">")+1);
+          filenames[0] = remove_trailing(filenames[0]," ");
+          filenames[1] = remove_trailing(filenames[1]," ");
+
+          args = commands;
+          int f = open(filenames[0],O_RDONLY);
+          int f_w = open(filenames[1],O_WRONLY);
+          int save = dup(STDIN_FILENO);
+          int save_out = dup(STDOUT_FILENO);
+          dup2(f,STDIN_FILENO);
+          dup2(f_w,STDOUT_FILENO);
+          close(f);
+          close(f_w);
+          forkxec(args);
+          dup2(save,0);
+          dup2(save_out,1);
+
 
         }
         else {
